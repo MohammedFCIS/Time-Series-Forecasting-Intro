@@ -136,3 +136,11 @@ Pacf(count_d1, main='PACF for Differenced Series')
 
 
 
+
+
+# Fitting an ARIMA model
+We can specify non-seasonal ARIMA structure and fit the model to de-seasonalize data. Parameters (1,1,1) suggested by the automated procedure are in line with our expectations based on the steps above; the model incorporates differencing of degree 1, and uses an autoregressive term of first lag and a moving average model of order 1:
+```{r auto}
+auto.arima(deseasonal_cnt, seasonal=FALSE)
+```
+
