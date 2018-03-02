@@ -31,3 +31,19 @@ output: html_document
     + If there are visible patterns or bias, plot `ACF/PACF`. Are any additional order parameters needed?
     + Refit model if needed. Compare model errors and fit criteria such as `AIC` or `BIC`.
     + Calculate forecast using the chosen model.
+
+# Setup
+## Load R Packages
+
+```{r Load_R_Packages}
+library(tidyverse)
+library('tseries')
+```
+
+## Load DataSet
+his dataset contains the hourly and daily count of rental bikes between years 2011 and 2012 in Capital bikeshare system with the corresponding weather and seasonal information.
+
+
+```{r load_dataset}
+daily_data = read_csv('data/day.csv')
+```
