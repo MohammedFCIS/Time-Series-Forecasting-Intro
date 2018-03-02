@@ -49,6 +49,7 @@ his dataset contains the hourly and daily count of rental bikes between years 20
 daily_data = read_csv('data/day.csv')
 ```
 
+
 # Data EDA
 A good starting point is to plot the series and visually examine it for any outliers, volatility, or irregularities. 
 
@@ -89,3 +90,14 @@ ggplot() +
 ```
 
 In addition to volatility, modeling daily level data might require specifying multiple seasonality levels, such day of the week, week of the year, month of the year, holidays, etc. For the sake of simplicity, we will model the smoothed series of weekly moving average (as shown by the blue line above).
+
+
+# Decompose Data
+First, we calculate the seasonal component of the data using `stl()`. STL is a flexible function for decomposing and forecasting the series. It calculates the seasonal component of the series using smoothing, and adjusts the original series by subtracting seasonality in two simple lines:
+```{r decompose_Season}
+count_ma <- ts(na.omit(daily_data$cnt_ma), frequency=30)
+decomp <- stl(count_ma, s.window="periodic")
+deseasonal_cnt <- seasadj(decomp)
+plot(decomp)
+```
+
