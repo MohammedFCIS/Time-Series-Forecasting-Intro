@@ -144,3 +144,56 @@ We can specify non-seasonal ARIMA structure and fit the model to de-seasonalize 
 auto.arima(deseasonal_cnt, seasonal=FALSE)
 ```
 
+# Evaluate and Iterate
+```{r acf_auto}
+fit<-auto.arima(deseasonal_cnt, seasonal=FALSE)
+tsdisplay(residuals(fit), lag.max=45, main='(1,1,1) Model Residuals')
+```
+
+
+
+There is a clear pattern present in ACF/PACF and model residuals plots repeating at lag 7. This suggests that our model may be better off with a different specification, such as p = 7 or q = 7. 
+
+```{r arima_7}
+fit2 <- arima(deseasonal_cnt, order=c(1,1,7))
+
+fit2
+
+tsdisplay(residuals(fit2), lag.max=15, main='Seasonal Model Residuals')
+```
+
+Forecasting using a fitted model is straightforward in R. We can specify forecast horizon h periods ahead for predictions to be made, and use the fitted model to generate those predictions:
+
+```{r forcast}
+fcast <- forecast(fit2, h=30)
+plot(fcast)
+```
+The light blue line above shows the fit provided by the model, but what if we wanted to get a sense of how the model will perform in the future? One method is to reserve a portion of our data as a "hold-out" set, fit the model, and then compare the forecast to the actual observed values:
+
+```{r evaluate}
+hold <- window(ts(deseasonal_cnt), start=700)
+
+fit_no_holdout = arima(ts(deseasonal_cnt[-c(700:725)]), order=c(1,1,7))
+
+fcast_no_holdout <- forecast(fit_no_holdout,h=25)
+plot(fcast_no_holdout, main=" ")
+lines(ts(deseasonal_cnt))
+```
+
+
+However, the blue line representing forecast seems very naive: It goes close to a straight line fairly soon, which seems unlikely given past behavior of the series. Recall that the model is assuming a series with no seasonality, and is differencing the original non-stationary data. In other words, plotted predictions are based on the assumption that there will be no other seasonal fluctuations in the data and the change in the number of bicycles from one day to another is more or less constant in mean and variance. This forecast may be a naive model, but it illustrates the process of choosing an ARIMA model and could also serve as a benchmark to grade against as more complex models are built.
+
+How can we improve the forecast and iterate on this model? One simple change is to add back the seasonal component we extracted earlier. Another approach would be to allow for (P, D, Q) components to be included in the model, which is a default in the auto.arima() function. Re-fitting the model on the same data, we see that there still might be some seasonal pattern in the series, with the seasonal component described by AR(1): 
+
+```{r model_2}
+fit_w_seasonality = auto.arima(deseasonal_cnt, seasonal=TRUE)
+fit_w_seasonality
+seas_fcast <- forecast(fit_w_seasonality, h=30)
+plot(seas_fcast)
+```
+
+
+# Credit
+https://www.datascience.com/learn-data-science/tutorials/introduction-to-forecasting-with-arima-r-data-science
+
+
