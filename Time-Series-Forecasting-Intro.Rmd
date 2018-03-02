@@ -102,3 +102,37 @@ plot(decomp)
 ```
 
 # Ensuring Stationarity
+Test stationarity
+```{r test_stationarity}
+adf.test(count_ma, alternative = "stationary")
+```
+
+
+# Autocorrelations and Choosing Model Order
+
+```{r ACF}
+Acf(count_ma, main='')
+
+Pacf(count_ma, main='')
+```
+
+We can start with the order of d = 1 and re-evaluate whether further differencing is needed.
+
+The augmented Dickey-Fuller test on differenced data rejects the null hypotheses of non-stationarity. Plotting the differenced series, we see an oscillating pattern around 0 with no visible strong trend. This suggests that differencing of order 1 terms is sufficient and should be included in the model. 
+
+```{r diff_1}
+count_d1 <- diff(deseasonal_cnt, differences = 1)
+plot(count_d1)
+adf.test(count_d1, alternative = "stationary")
+```
+
+
+Next, spikes at particular lags of the differenced series can help inform the choice of p or q for our model:
+
+```{r acf_diff}
+Acf(count_d1, main='ACF for Differenced Series')
+Pacf(count_d1, main='PACF for Differenced Series')
+```
+
+
+
