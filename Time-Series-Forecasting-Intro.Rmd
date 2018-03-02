@@ -37,7 +37,8 @@ output: html_document
 
 ```{r Load_R_Packages}
 library(tidyverse)
-library('tseries')
+library(tseries)
+library(forecast)
 ```
 
 ## Load DataSet
@@ -47,3 +48,44 @@ his dataset contains the hourly and daily count of rental bikes between years 20
 ```{r load_dataset}
 daily_data = read_csv('data/day.csv')
 ```
+
+# Data EDA
+A good starting point is to plot the series and visually examine it for any outliers, volatility, or irregularities. 
+
+In this case, bicycle checkouts are showing a lot of fluctuations from one day to another. However, even with this volatility present, we already see some patterns emerge. For example, lower usage of bicycles occurs in the winter months and higher checkout numbers are observed in the summer months:
+```{r data_eda}
+daily_data$Date = as.Date(daily_data$dteday)
+ggplot(daily_data, aes(Date, cnt)) + geom_line() + scale_x_date('month')  + ylab("Daily Bike Checkouts") +
+            xlab("")
+```
+
+In some cases, the number of bicycles checked out dropped below 100 one day and rose to over 4,000 the next day. These are suspected outliers that could bias the model by skewing statistical summaries. R provides a convenient method for removing time series outliers: tsclean() as part of its forecast package. tsclean() identifies and replaces outliers using series smoothing and decomposition. This method is also capable of inputting missing values in the series if there are any.
+
+Note that we are using the ts() command to create a time series object to pass to tsclean():
+
+```{r ts_clean}
+count_ts = ts(daily_data[, c('cnt')])
+
+daily_data$clean_cnt <- tsclean(count_ts[1:length(count_ts),])
+
+ggplot() +
+  geom_line(data = daily_data, aes(x = Date, y = clean_cnt)) + ylab('Cleaned Bicycle Count')
+```
+
+Even after removing outliers, the daily data is still pretty volatile. Let us smooth the draw
+
+```{r smooth}
+# Weekly
+daily_data$cnt_ma <- ma(daily_data$clean_cnt, order=7) # using the clean count with no outliers
+# Monthly
+daily_data$cnt_ma30 <- ma(daily_data$clean_cnt, order=30)
+
+
+ggplot() +
+  geom_line(data = daily_data, aes(x = Date, y = clean_cnt, colour = "Counts")) +
+  geom_line(data = daily_data, aes(x = Date, y = cnt_ma,   colour = "Weekly Moving Average"))  +
+  geom_line(data = daily_data, aes(x = Date, y = cnt_ma30, colour = "Monthly Moving Average"))  +
+  ylab('Bicycle Count')
+```
+
+In addition to volatility, modeling daily level data might require specifying multiple seasonality levels, such day of the week, week of the year, month of the year, holidays, etc. For the sake of simplicity, we will model the smoothed series of weekly moving average (as shown by the blue line above).
