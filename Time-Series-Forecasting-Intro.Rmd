@@ -101,3 +101,4 @@ deseasonal_cnt <- seasadj(decomp)
 plot(decomp)
 ```
 
+# Ensuring Stationarity
